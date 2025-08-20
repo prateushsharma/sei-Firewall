@@ -1,0 +1,36 @@
+
+📦 Loaded 1000 transfers for analysis
+🚀 Starting comprehensive pooling analysis...
+🔍 Analyzing transaction patterns...
+⏰ Analyzing time anomalies...
+🌐 Analyzing transfer network...
+📊 Analyzing volume patterns...
+👥 Clustering address behavior...
+🎨 Generating visualizations...
+
+================================================================================
+🤖 POOLING DETECTION RESULTS
+================================================================================
+
+📈 Transaction Patterns:
+   Circular trades: 66
+   Rapid back-and-forth: 9
+   Suspicious address pairs: 22
+   Clustered amounts: 2
+
+⏰ Time Anomalies: 153
+
+🌐 Network Analysis:
+   Nodes: 91
+   Edges: 139
+   Communities: 12
+
+📊 Volume Analysis:
+   Anomalous periods: 0
+
+⚠️  Overall Risk Score: 100/100
+   🚨 HIGH RISK: Strong evidence of artificial pooling
+
+💾 Visualizations saved: volume_over_time.png, amount_distribution.png
+
+💾 Detailed results saved to pooling_analysis_results.json
