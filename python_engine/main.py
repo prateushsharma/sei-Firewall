@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 from data_fetch import fetch_token_transfers
@@ -7,6 +8,15 @@ from generate_explanations import analyze_token_transfers
 from fetch_results import read_pooling_analysis
 
 app = FastAPI()
+
+# Enable CORS (allow all origins)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+)
 
 # Define input schema
 class TokenRequest(BaseModel):
