@@ -8,6 +8,8 @@ if (!BOT_TOKEN) {
 }
 
 const bot = new Telegraf(BOT_TOKEN);
+const { initMCP, callTool,readResource, listResources  } = require('./mcpClient');
+initMCP({ log: true }); // start SSE connection on bot launch
 
 /* -------------------------
    Tiny UI helpers (inline)
@@ -297,6 +299,33 @@ bot.on('callback_query', async (ctx) => {
   } catch (e) {
     await ctx.answerCbQuery('Error');
     await ctx.reply(`❌ ${e.message || String(e)}`);
+  }
+});
+
+bot.command('get_transfers', async (ctx) => {
+  const token = ctx.message.text.replace(/^\/get_transfers(@\w+)?\s*/i, '').trim();
+  if (!token) return ctx.reply('usage: /get_transfers 0xYourTokenAddress');
+
+  const wait = await ctx.reply('Querying MCP get_token_transfers…');
+
+  try {
+    // const resp = await callTool('get_token_transfers', { token_address: token });
+    const resp = await callTool('get_token_transfers', { tokenAddress: token });
+
+    await ctx.telegram.editMessageText(
+      wait.chat.id,
+      wait.message_id,
+      undefined,
+      '```json\n' + JSON.stringify(resp, null, 2).slice(0, 3500) + '\n```',
+      { parse_mode: 'Markdown' }
+    );
+  } catch (e) {
+    await ctx.telegram.editMessageText(
+      wait.chat.id,
+      wait.message_id,
+      undefined,
+      `❌ MCP error: ${e.message}`
+    );
   }
 });
 
