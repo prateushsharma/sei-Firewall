@@ -1,0 +1,14 @@
+numpy
+pandas
+aiohttp
+aiofiles
+requests
+networkx
+matplotlib
+scikit-learn
+python-louvain
+fastapi
+uvicorn
+python-dotenv
+pydantic
+groq

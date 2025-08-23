@@ -1,0 +1,53 @@
+Pooling Analysis for Token: 0x95597EB8D227a7c4B4f5E807a815C5178eE6dBE1
+Analysis started: 2025-08-23T03:18:00.757624
+============================================================
+
+🔍 Analyzing transaction patterns...
+⏰ Analyzing time anomalies...
+🌐 Analyzing transfer network...
+👥 Clustering address behavior...
+📊 Analyzing volume patterns...
+🎨 Generating visualizations...
+
+================================================================================
+🤖 POOLING DETECTION RESULTS
+================================================================================
+
+📈 TRANSACTION PATTERN ANALYSIS:
+   Circular trades detected: 162
+     • 2-node cycles: 16 (Less suspicious - could be simple buy/sell)
+     • 3-node cycles: 24 (Moderately suspicious - suggests coordination)
+     • 4+-node cycles: 39 (Highly suspicious - complex wash trading)
+     • 5+-node cycles: 49 (Highly suspicious - complex wash trading)
+     • 6+-node cycles: 34 (Highly suspicious - complex wash trading)
+   Rapid back-and-forth trades: 10
+   Suspicious address pairs: 26
+   Clustered amounts: 2
+
+⏰ TIME ANOMALY ANALYSIS:
+   Time anomalies detected: 82
+   Justification: Anomalies detected when transactions show unusual timing patterns
+   that deviate from normal trading behavior, suggesting coordinated activity
+
+🌐 NETWORK ANALYSIS:
+   Nodes: 110
+   Edges: 165
+   Communities: 14
+   Network centralization: 2.452
+   Justification: High centralization suggests few addresses control most flow
+
+📊 VOLUME ANALYSIS:
+   Anomalous time periods: 0
+   Total time periods analyzed: 17
+   Justification: Volume spikes indicate coordinated trading activity
+
+⚠️  RISK ASSESSMENT:
+   Overall Risk Score: 89/100
+   🚨 HIGH RISK: Strong evidence of artificial pooling/wash trading
+   Multiple suspicious patterns detected across different analysis dimensions
+
+💾 Results saved in: data_analysis\analysis_0x95597EB8D227a7c4B4f5E807a815C5178eE6dBE1
+📊 Visualizations: data_analysis\analysis_0x95597EB8D227a7c4B4f5E807a815C5178eE6dBE1\images
+
+✅ Analysis completed: 2025-08-23T03:18:09.454472
+📁 Complete results saved in: data_analysis\analysis_0x95597EB8D227a7c4B4f5E807a815C5178eE6dBE1

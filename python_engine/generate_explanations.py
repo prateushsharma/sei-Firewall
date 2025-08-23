@@ -1,11 +1,18 @@
-def generate_risk_summary(analysis_text):
-    """
-    Generate a human-readable risk summary from analysis text output
-    """
-    prompt = f"""
-Analyze this token transfer analysis and provide a comprehensive risk assessment summary:
+from groq import AsyncGroq
+from dotenv import load_dotenv
+import os
 
-{analysis_text}
+load_dotenv()
+
+GROQ_API_KEY = os.getenv("GROQ_API")
+
+
+async def analyze_token_transfers(results: str):
+    client = AsyncGroq(api_key=GROQ_API_KEY)
+
+    prompt = f"""Analyze this token transfer analysis and provide a comprehensive risk assessment summary:
+
+{results}
 
 ## METRIC EXPLANATIONS (for context):
 - **Circular trades**: Transactions where funds move through multiple addresses and return to origin (A→B→C→A). This indicates artificial volume creation and wash trading.
@@ -26,4 +33,19 @@ Based on these explanations, provide a clear, professional summary that:
 6. Structures the response with clear sections
 """
 
-    return prompt
+    completion = await client.chat.completions.create(
+        model="deepseek-r1-distill-llama-70b",
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        temperature=0.6,
+        max_completion_tokens=1024,
+        top_p=0.95,
+        stream=False,
+        reasoning_format="hidden"
+    )
+
+    return completion.choices[0].message.content
