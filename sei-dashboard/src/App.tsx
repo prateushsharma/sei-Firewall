@@ -10,7 +10,7 @@ import TransactionFeed from './components/dashboard/TransactionFeed';
 import Particles from './components/background/Particles';
 import ChatWidget from './components/chat/ChatWidget';
 import './styles/globals.css';
-
+import ChatInterface from './components/chat/ChatInterface';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -22,8 +22,10 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
+    
     <QueryClientProvider client={queryClient}>
       <div className="app">
+        <ChatInterface />
         <Particles />
         <Header />
         <main className="main-content">
