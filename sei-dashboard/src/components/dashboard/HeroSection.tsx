@@ -1,216 +1,191 @@
-
-import React, { useEffect, useState } from 'react';
+// src/components/dashboard/HeroSection.tsx
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Activity, 
-  DollarSign, 
-  Users, 
-  Zap 
-} from 'lucide-react';
+import { TrendingUp, Activity, DollarSign, Users } from 'lucide-react';
+import './HeroSection.css';
 
-interface LiveMetric {
+interface LiveStat {
   label: string;
   value: string;
   change: string;
-  isPositive: boolean;
-  icon: React.ElementType;
+  trend: 'up' | 'down';
+  icon: React.ReactNode;
 }
 
-export const HeroSection: React.FC = () => {
+const HeroSection: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [blockNumber, setBlockNumber] = useState(2847392);
+  const [blockHeight, setBlockHeight] = useState(15847293);
+  const [seiPrice, setSeiPrice] = useState(0.42);
+  const [gasPrice, setGasPrice] = useState(0.01);
 
-  // Update time every second
+  // Simulate live data updates
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+      setBlockHeight(prev => prev + Math.floor(Math.random() * 3));
+      setSeiPrice(prev => prev + (Math.random() - 0.5) * 0.01);
+      setGasPrice(prev => Math.max(0.008, prev + (Math.random() - 0.5) * 0.002));
+    }, 3000);
+
+    return () => clearInterval(interval);
   }, []);
 
-  // Simulate live block updates
-  useEffect(() => {
-    const blockTimer = setInterval(() => {
-      setBlockNumber(prev => prev + Math.floor(Math.random() * 3) + 1);
-    }, 12000); // New block every ~12 seconds
-    return () => clearInterval(blockTimer);
-  }, []);
-
-  const liveMetrics: LiveMetric[] = [
+  const liveStats: LiveStat[] = [
     {
       label: 'SEI Price',
-      value: '$0.4231',
-      change: '+5.32%',
-      isPositive: true,
-      icon: DollarSign
+      value: `$${seiPrice.toFixed(4)}`,
+      change: '+5.2%',
+      trend: 'up',
+      icon: <DollarSign size={20} />
     },
     {
-      label: 'Market Cap',
-      value: '$1.2B',
-      change: '+2.1%',
-      isPositive: true,
-      icon: TrendingUp
-    },
-    {
-      label: 'Active Validators',
-      value: '125',
-      change: '+3',
-      isPositive: true,
-      icon: Users
+      label: 'Block Height',
+      value: blockHeight.toLocaleString(),
+      change: '+0.1%',
+      trend: 'up',
+      icon: <Activity size={20} />
     },
     {
       label: 'Gas Price',
-      value: '0.025 SEI',
-      change: '-1.2%',
-      isPositive: false,
-      icon: Zap
+      value: `${gasPrice.toFixed(3)} SEI`,
+      change: '-2.1%',
+      trend: 'down',
+      icon: <TrendingUp size={20} />
+    },
+    {
+      label: 'Active Users',
+      value: '12.4K',
+      change: '+8.7%',
+      trend: 'up',
+      icon: <Users size={20} />
     }
   ];
 
-  return (
-    <section className="relative py-12 px-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Main Hero Content */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-12"
-        >
-          <motion.h1 
-            className="text-5xl md:text-7xl font-bold mb-6"
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <span className="text-gradient">Sei Network</span>
-            <br />
-            <span className="text-white">Explorer</span>
-          </motion.h1>
-          
-          <motion.p 
-            className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            Real-time blockchain analytics and exploration for the fastest Layer 1
-          </motion.p>
+  const containerVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.8,
+        staggerChildren: 0.2
+      }
+    }
+  };
 
-          {/* Live Stats Bar */}
-          <motion.div 
-            className="glass-card p-6 inline-block"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.6 }}
-          >
-            <div className="flex items-center space-x-8">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
-                <span className="text-sm text-gray-300">Live</span>
-              </div>
-              
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white">
-                  {blockNumber.toLocaleString()}
-                </div>
-                <div className="text-xs text-gray-400">Latest Block</div>
-              </div>
-              
-              <div className="text-center">
-                <div className="text-2xl font-bold text-sei-gold">
-                  {currentTime.toLocaleTimeString()}
-                </div>
-                <div className="text-xs text-gray-400">Network Time</div>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Activity className="w-5 h-5 text-green-400" />
-                <span className="text-sm text-green-400">12.3s block time</span>
-              </div>
-            </div>
-          </motion.div>
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.6 }
+    }
+  };
+
+  return (
+    <section className="hero-section">
+      <div className="hero-bg-effects">
+        <div className="hero-orb orb-1" />
+        <div className="hero-orb orb-2" />
+        <div className="hero-gradient" />
+      </div>
+
+      <motion.div 
+        className="hero-container"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* Main Title */}
+        <motion.div className="hero-content" variants={itemVariants}>
+          <h1 className="hero-title">
+            <span className="title-main">Sei Blockchain</span>
+            <span className="title-accent">Explorer</span>
+          </h1>
+          <p className="hero-subtitle">
+            Real-time insights into the fastest Layer 1 blockchain
+          </p>
+          <div className="hero-timestamp">
+            <div className="timestamp-dot" />
+            <span>Live • {currentTime.toLocaleTimeString()}</span>
+          </div>
         </motion.div>
 
-        {/* Live Metrics Grid */}
+        {/* Live Stats Grid */}
         <motion.div 
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.8 }}
+          className="stats-grid"
+          variants={itemVariants}
         >
-          {liveMetrics.map((metric, index) => (
-            <MetricCard key={metric.label} metric={metric} delay={index * 0.1} />
+          {liveStats.map((stat, index) => (
+            <motion.div
+              key={stat.label}
+              className="stat-card glass-card"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.1 + 0.5 }}
+              whileHover={{ scale: 1.02, rotateY: 5 }}
+            >
+              <div className="stat-icon">
+                {stat.icon}
+              </div>
+              <div className="stat-content">
+                <div className="stat-label">{stat.label}</div>
+                <div className="stat-value">{stat.value}</div>
+                <div className={`stat-change ${stat.trend}`}>
+                  <TrendingUp 
+                    size={12} 
+                    style={{ 
+                      transform: stat.trend === 'down' ? 'rotate(180deg)' : 'none' 
+                    }} 
+                  />
+                  {stat.change}
+                </div>
+              </div>
+              <div className="stat-glow" />
+            </motion.div>
           ))}
         </motion.div>
 
-        {/* Quick Actions */}
+        {/* CTA Buttons */}
         <motion.div 
-          className="mt-12 flex flex-wrap justify-center gap-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
+          className="hero-actions"
+          variants={itemVariants}
         >
-          <QuickActionButton icon={Activity} label="View Transactions" />
-          <QuickActionButton icon={TrendingUp} label="Price Charts" />
-          <QuickActionButton icon={Users} label="Validators" />
-          <QuickActionButton icon={Zap} label="Network Stats" />
+          <motion.button 
+            className="btn btn-primary"
+            whileHover={{ scale: 1.05, boxShadow: '0 10px 40px rgba(220, 38, 38, 0.4)' }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <span>Explore Network</span>
+            <div className="btn-shine" />
+          </motion.button>
+          <motion.button 
+            className="btn btn-ghost"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            View Analytics
+          </motion.button>
         </motion.div>
-      </div>
+
+        {/* Network Status */}
+        <motion.div 
+          className="network-status"
+          variants={itemVariants}
+        >
+          <div className="status-indicator">
+            <div className="status-dot online" />
+            <span>Network Online</span>
+          </div>
+          <div className="status-divider" />
+          <div className="status-info">
+            <span>TPS: <strong>22,000</strong></span>
+            <span>Finality: <strong>600ms</strong></span>
+          </div>
+        </motion.div>
+      </motion.div>
     </section>
   );
 };
 
-// Metric Card Component
-const MetricCard: React.FC<{ 
-  metric: LiveMetric; 
-  delay: number;
-}> = ({ metric, delay }) => {
-  const Icon = metric.icon;
-  
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay }}
-      whileHover={{ scale: 1.05, y: -5 }}
-      className="glass-card p-6 text-center group cursor-pointer"
-    >
-      <div className="flex items-center justify-center mb-4">
-        <div className="p-3 bg-sei-gradient rounded-xl group-hover:animate-pulse">
-          <Icon className="w-6 h-6 text-white" />
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <h3 className="text-lg font-bold text-white">{metric.value}</h3>
-        <p className="text-sm text-gray-400">{metric.label}</p>
-        <div className={`flex items-center justify-center space-x-1 text-sm ${
-          metric.isPositive ? 'text-green-400' : 'text-red-400'
-        }`}>
-          {metric.isPositive ? (
-            <TrendingUp className="w-4 h-4" />
-          ) : (
-            <TrendingDown className="w-4 h-4" />
-          )}
-          <span>{metric.change}</span>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
-
-// Quick Action Button Component
-const QuickActionButton: React.FC<{
-  icon: React.ElementType;
-  label: string;
-}> = ({ icon: Icon, label }) => (
-  <motion.button
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
-    className="btn-glass flex items-center space-x-2"
-  >
-    <Icon className="w-5 h-5" />
-    <span>{label}</span>
-  </motion.button>
-);
+export default HeroSection;

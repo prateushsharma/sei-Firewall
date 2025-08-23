@@ -1,131 +1,188 @@
+// src/components/background/Particles.tsx
+import React, { useRef, useMemo } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Points, PointMaterial } from '@react-three/drei';
+import * as THREE from 'three';
+import './Particles.css';
 
+interface ParticlesProps {
+  count?: number;
+}
 
-import React, { useCallback } from 'react';
-import Particles from 'react-tsparticles';
-import { loadSlim } from 'tsparticles-slim';
-import type { Container, Engine } from 'tsparticles-engine';
+const ParticleField: React.FC<ParticlesProps> = ({ count = 1000 }) => {
+  const mesh = useRef<THREE.Points>(null);
+  
+  const particles = useMemo(() => {
+    const temp = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const i3 = i * 3;
+      temp[i3] = (Math.random() - 0.5) * 20;
+      temp[i3 + 1] = (Math.random() - 0.5) * 20;
+      temp[i3 + 2] = (Math.random() - 0.5) * 20;
+    }
+    return temp;
+  }, [count]);
 
-export const ParticlesBackground: React.FC = () => {
-  const particlesInit = useCallback(async (engine: Engine) => {
-    await loadSlim(engine);
-  }, []);
-
-  const particlesLoaded = useCallback(async (container: Container | undefined) => {
-    console.log('Particles loaded:', container);
-  }, []);
+  useFrame((state) => {
+    if (mesh.current) {
+      mesh.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.1) * 0.1;
+      mesh.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.15) * 0.1;
+      
+      // Animate individual particles
+      const positions = mesh.current.geometry.attributes.position.array as Float32Array;
+      for (let i = 0; i < positions.length; i += 3) {
+        positions[i + 1] += Math.sin(state.clock.elapsedTime * 0.5 + i) * 0.002;
+        positions[i] += Math.cos(state.clock.elapsedTime * 0.3 + i) * 0.001;
+      }
+      mesh.current.geometry.attributes.position.needsUpdate = true;
+    }
+  });
 
   return (
-    <Particles
-      id="tsparticles"
-      init={particlesInit}
-      loaded={particlesLoaded}
-      className="absolute inset-0 z-0"
-      options={{
-        background: {
-          color: {
-            value: "transparent",
-          },
-        },
-        fpsLimit: 120,
-        interactivity: {
-          events: {
-            onClick: {
-              enable: true,
-              mode: "push",
-            },
-            onHover: {
-              enable: true,
-              mode: "repulse",
-            },
-            resize: true,
-          },
-          modes: {
-            push: {
-              quantity: 2,
-            },
-            repulse: {
-              distance: 100,
-              duration: 0.4,
-            },
-          },
-        },
-        particles: {
-          color: {
-            value: ["#dc2626", "#ffd700", "#ffffff"],
-          },
-          links: {
-            color: "#dc2626",
-            distance: 150,
-            enable: true,
-            opacity: 0.3,
-            width: 1,
-          },
-          move: {
-            direction: "none",
-            enable: true,
-            outModes: {
-              default: "bounce",
-            },
-            random: false,
-            speed: 1,
-            straight: false,
-          },
-          number: {
-            density: {
-              enable: true,
-              area: 800,
-            },
-            value: 80,
-          },
-          opacity: {
-            value: 0.5,
-            animation: {
-              enable: true,
-              speed: 1,
-              minimumValue: 0.1,
-            },
-          },
-          shape: {
-            type: "circle",
-          },
-          size: {
-            value: { min: 1, max: 3 },
-            animation: {
-              enable: true,
-              speed: 2,
-              minimumValue: 0.5,
-            },
-          },
-        },
-        detectRetina: true,
-      }}
-    />
+    <Points ref={mesh} positions={particles} stride={3} frustumCulled={false}>
+      <PointMaterial
+        transparent
+        color="#ffd700"
+        size={0.02}
+        sizeAttenuation={true}
+        depthWrite={false}
+        opacity={0.6}
+        blending={THREE.AdditiveBlending}
+      />
+    </Points>
   );
 };
 
-// Alternative simple particles component without library dependency
-export const Particles: React.FC = () => {
+const ConnectedParticles: React.FC = () => {
+  const mesh = useRef<THREE.Points>(null);
+  const lines = useRef<THREE.LineSegments>(null);
+  
+  const particleCount = 50;
+  
+  const particles = useMemo(() => {
+    const temp = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount; i++) {
+      const i3 = i * 3;
+      temp[i3] = (Math.random() - 0.5) * 15;
+      temp[i3 + 1] = (Math.random() - 0.5) * 15;
+      temp[i3 + 2] = (Math.random() - 0.5) * 15;
+    }
+    return temp;
+  }, []);
+
+  const connections = useMemo(() => {
+    const linePositions = [];
+    const positions = particles;
+    
+    for (let i = 0; i < particleCount; i++) {
+      for (let j = i + 1; j < particleCount; j++) {
+        const i3 = i * 3;
+        const j3 = j * 3;
+        
+        const dx = positions[i3] - positions[j3];
+        const dy = positions[i3 + 1] - positions[j3 + 1];
+        const dz = positions[i3 + 2] - positions[j3 + 2];
+        const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        
+        if (distance < 3) {
+          linePositions.push(
+            positions[i3], positions[i3 + 1], positions[i3 + 2],
+            positions[j3], positions[j3 + 1], positions[j3 + 2]
+          );
+        }
+      }
+    }
+    
+    return new Float32Array(linePositions);
+  }, [particles]);
+
+  useFrame((state) => {
+    if (mesh.current) {
+      mesh.current.rotation.y += 0.002;
+      mesh.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.1) * 0.1;
+    }
+    
+    if (lines.current) {
+      lines.current.rotation.y += 0.001;
+    }
+  });
+
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {/* Floating orbs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-sei-500/10 rounded-full blur-3xl animate-float" />
-      <div className="absolute top-3/4 right-1/4 w-80 h-80 bg-sei-gold/10 rounded-full blur-3xl animate-float-delay-1" />
-      <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl animate-float-delay-2" />
+    <group>
+      <Points ref={mesh} positions={particles} stride={3} frustumCulled={false}>
+        <PointMaterial
+          transparent
+          color="#dc2626"
+          size={0.05}
+          sizeAttenuation={true}
+          depthWrite={false}
+          opacity={0.8}
+        />
+      </Points>
       
-      {/* Grid overlay */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-5" 
-           style={{
-             backgroundImage: `
-               linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-               linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
-             `,
-             backgroundSize: '50px 50px'
-           }} 
-      />
+      <lineSegments ref={lines}>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            count={connections.length / 3}
+            array={connections}
+            itemSize={3}
+          />
+        </bufferGeometry>
+        <lineBasicMaterial
+          color="#ffd700"
+          transparent
+          opacity={0.2}
+          blending={THREE.AdditiveBlending}
+        />
+      </lineSegments>
+    </group>
+  );
+};
+
+const Particles: React.FC = () => {
+  return (
+    <div className="particles-container">
+      <Canvas
+        camera={{ position: [0, 0, 10], fov: 75 }}
+        style={{ background: 'transparent' }}
+      >
+        <ambientLight intensity={0.5} />
+        <ParticleField count={800} />
+        <ConnectedParticles />
+        
+        {/* Floating geometric shapes */}
+        <mesh position={[5, 3, -2]} rotation={[0, 0, 0]}>
+          <octahedronGeometry args={[0.3]} />
+          <meshBasicMaterial 
+            color="#dc2626" 
+            transparent 
+            opacity={0.1}
+            wireframe
+          />
+        </mesh>
+        
+        <mesh position={[-4, -2, -1]} rotation={[0, 0, 0]}>
+          <icosahedronGeometry args={[0.4]} />
+          <meshBasicMaterial 
+            color="#ffd700" 
+            transparent 
+            opacity={0.1}
+            wireframe
+          />
+        </mesh>
+      </Canvas>
       
-      {/* Gradient overlays */}
-      <div className="absolute inset-0 bg-gradient-to-br from-sei-500/5 via-transparent to-sei-gold/5" />
-      <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/5 via-transparent to-blue-500/5" />
+      {/* CSS-based floating elements */}
+      <div className="floating-elements">
+        <div className="floating-shape shape-1" />
+        <div className="floating-shape shape-2" />
+        <div className="floating-shape shape-3" />
+        <div className="floating-line line-1" />
+        <div className="floating-line line-2" />
+      </div>
     </div>
   );
 };
+
+export default Particles;

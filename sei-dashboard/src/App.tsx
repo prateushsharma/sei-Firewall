@@ -1,27 +1,21 @@
-
+// src/App.tsx
 import React from 'react';
-import { motion } from 'framer-motion';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
-
-// Layout Components
-import { Particles } from './components/background/Particles';
-import { Header } from './components/layout/Header';
-
-// Dashboard Components
-import { HeroSection } from './components/dashboard/HeroSection';
-import { MetricsGrid } from './components/dashboard/MetricsGrid';
-import { TokenExplorer } from './components/dashboard/TokenExplorer';
-import { TransactionFeed } from './components/dashboard/TransactionFeed';
-
-// Chat Component
-import { ChatWidget } from './components/chat/ChatWidget';
+import Header from './components/layout/Header';
+import HeroSection from './components/dashboard/HeroSection';
+import MetricsGrid from './components/dashboard/MetricsGrid';
+import TokenExplorer from './components/dashboard/TokenExplorer';
+import TransactionFeed from './components/dashboard/TransactionFeed';
+import Particles from './components/background/Particles';
+import ChatWidget from './components/chat/ChatWidget';
+import './styles/globals.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30000, // 30 seconds
-      cacheTime: 300000, // 5 minutes
+      refetchInterval: 5000,
+      staleTime: 3000,
     },
   },
 });
@@ -29,49 +23,27 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white overflow-hidden">
-        {/* Animated Background */}
+      <div className="app">
         <Particles />
-        
-        {/* Main Content */}
-        <div className="relative z-10">
-          {/* Header */}
-          <Header />
-          
-          {/* Main Dashboard Content */}
-          <motion.main
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            className="container mx-auto px-4 pb-20"
-          >
-            {/* Hero Section with Live Stats */}
-            <HeroSection />
-            
-            {/* Metrics Grid */}
-            <MetricsGrid />
-            
-            {/* Token Explorer and Transaction Feed Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-              <TokenExplorer />
-              <TransactionFeed />
-            </div>
-          </motion.main>
-        </div>
-        
-        {/* Floating Chat Widget */}
+        <Header />
+        <main className="main-content">
+          <HeroSection />
+          <MetricsGrid />
+          <div className="explorer-section">
+            <TokenExplorer />
+            <TransactionFeed />
+          </div>
+        </main>
         <ChatWidget />
-        
-        {/* Toast Notifications */}
-        <Toaster
+        <Toaster 
           position="top-right"
           toastOptions={{
             duration: 4000,
-            className: 'glass-card text-white',
             style: {
               background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(10px)',
+              backdropFilter: 'blur(20px)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: '#fff',
             },
           }}
         />

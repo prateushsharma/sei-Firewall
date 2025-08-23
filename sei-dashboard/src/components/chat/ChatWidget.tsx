@@ -1,49 +1,85 @@
-// File Location: ~/sei-Firewall/sei-dashboard/src/components/chat/ChatWidget.tsx
-
+// src/components/chat/ChatWidget.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  MessageCircle, 
-  X, 
-  Send, 
-  Bot, 
-  User,
-  Minimize2,
-  Maximize2,
-  Zap,
-  TrendingUp,
-  Search
-} from 'lucide-react';
+import { MessageCircle, Send, X, Bot, User, Zap } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import './ChatWidget.css';
 
 interface Message {
   id: string;
-  text: string;
+  content: string;
   sender: 'user' | 'bot';
   timestamp: Date;
   type?: 'text' | 'command' | 'result';
 }
 
-const quickCommands = [
-  { label: 'Get SEI Price', command: 'get token price SEI', icon: TrendingUp },
-  { label: 'Latest Block', command: 'get latest block', icon: Zap },
-  { label: 'Search Token', command: 'search token', icon: Search },
-];
+interface QuickAction {
+  label: string;
+  command: string;
+  icon: React.ReactNode;
+}
 
-export const ChatWidget: React.FC = () => {
+const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Hello! I\'m your Sei blockchain assistant. Ask me about tokens, transactions, or network stats!',
+      content: 'Hello! I\'m your Sei blockchain assistant. I can help you explore transactions, check balances, get token information, and more. What would you like to know?',
       sender: 'bot',
       timestamp: new Date(),
       type: 'text'
     }
   ]);
-  const [isTyping, setIsTyping] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const quickActions: QuickAction[] = [
+    {
+      label: 'Get SEI Price',
+      command: 'What is the current SEI price?',
+      icon: <Zap size={16} />
+    },
+    {
+      label: 'Network Status',
+      command: 'Show me the network status',
+      icon: <Bot size={16} />
+    },
+    {
+      label: 'Latest Block',
+      command: 'Get the latest block information',
+      icon: <MessageCircle size={16} />
+    }
+  ];
+
+  // Mock MCP server integration - replace with real MCP client
+  const sendToMCPServer = async (message: string): Promise<string> => {
+    // For real implementation, replace this with actual MCP client calls
+    // Example: const response = await mcpClient.callTool('get_token_info', { query: message });
+    
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+
+    // Mock responses based on message content
+    const lowerMessage = message.toLowerCase();
+    
+    if (lowerMessage.includes('price') || lowerMessage.includes('sei')) {
+      return `The current SEI price is $0.4287 (+5.2% in 24h). Market cap: $892M, Volume: $2.4M`;
+    } else if (lowerMessage.includes('network') || lowerMessage.includes('status')) {
+      return `Network Status: ✅ Online\nBlock Height: 15,847,293\nTPS: 18,420\nFinality: 380ms\nValidators: 127 active`;
+    } else if (lowerMessage.includes('block') || lowerMessage.includes('latest')) {
+      return `Latest Block #15,847,293:\n• Timestamp: ${new Date().toLocaleString()}\n• Transactions: 1,247\n• Gas Used: 67.8%\n• Block Size: 2.4MB`;
+    } else if (lowerMessage.includes('balance')) {
+      return `To check a balance, please provide an address. Example: "Check balance of sei1abcd..."`;
+    } else if (lowerMessage.includes('token')) {
+      return `Available tokens on Sei:\n• SEI (Native)\n• USDC: 0x3894085Ef7Ff0f0aeDf52E2A2704928d1Ec074F1\n• WETH: 0xE30feDd158A2e3b13e9badaeABaFc5516e963441\nProvide a token address for detailed info.`;
+    } else if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+      return `Hello! I'm here to help you with Sei blockchain queries. What would you like to know?`;
+    } else {
+      return `I can help you with:\n• Token prices and info\n• Balance checks\n• Network status\n• Block information\n• Transaction details\n\nTry asking "What is the SEI price?" or use the quick actions below.`;
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -53,249 +89,277 @@ export const ChatWidget: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  const sendMessage = async () => {
-    if (!message.trim()) return;
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isOpen]);
+
+  const handleSendMessage = async (content: string = inputValue) => {
+    if (!content.trim()) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      text: message,
+      content: content.trim(),
       sender: 'user',
       timestamp: new Date(),
       type: 'text'
     };
 
     setMessages(prev => [...prev, userMessage]);
-    setMessage('');
-    setIsTyping(true);
+    setInputValue('');
+    setIsLoading(true);
 
-    // Simulate API call to your MCP server
-    setTimeout(() => {
-      const botResponse: Message = {
+    try {
+      const response = await sendToMCPServer(content);
+      
+      const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: generateBotResponse(message),
+        content: response,
         sender: 'bot',
         timestamp: new Date(),
         type: 'result'
       };
+
+      setMessages(prev => [...prev, botMessage]);
+    } catch (error) {
+      toast.error('Failed to get response. Please try again.');
+      console.error('Chat error:', error);
       
-      setMessages(prev => [...prev, botResponse]);
-      setIsTyping(false);
-    }, 1500);
+      // Add error message
+      const errorMessage: Message = {
+        id: (Date.now() + 2).toString(),
+        content: 'Sorry, I encountered an error. Please try again or check if the MCP server is running.',
+        sender: 'bot',
+        timestamp: new Date(),
+        type: 'text'
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const generateBotResponse = (userInput: string): string => {
-    const input = userInput.toLowerCase();
-    
-    if (input.includes('price') || input.includes('sei')) {
-      return '💰 SEI Current Price: $0.4231 (+5.32% 24h)\n📊 Market Cap: $1.2B\n📈 24h Volume: $12.4M';
-    }
-    
-    if (input.includes('block') || input.includes('latest')) {
-      return '🧱 Latest Block: #2,847,392\n⏱️ Block Time: 12.3s\n⛽ Gas Price: 0.025 SEI';
-    }
-    
-    if (input.includes('token') && input.includes('search')) {
-      return '🔍 Popular tokens on Sei:\n• USDC - $1.00 (+0.02%)\n• WETH - $1,650.25 (-2.34%)\n• WBTC - $26,800.00 (+1.23%)\n\nTry: "get token info 0x3894085ef7ff0f0aedf52e2a2704928d1ec074f1"';
-    }
-    
-    if (input.includes('help')) {
-      return '🤖 Available commands:\n• Get token price/info\n• Check latest block\n• Search transactions\n• Network statistics\n• Token balances\n\nExample: "get balance 0x..."';
-    }
-    
-    return '🤔 I can help you with blockchain data! Try asking about:\n• Token prices and info\n• Block and transaction data\n• Network statistics\n• Address balances\n\nType "help" for more commands.';
-  };
-
-  const handleQuickCommand = (command: string) => {
-    setMessage(command);
+  const handleQuickAction = (command: string) => {
+    handleSendMessage(command);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      handleSendMessage();
     }
   };
 
-  if (!isOpen) {
-    return (
-      <motion.button
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-sei-gradient rounded-full flex items-center justify-center shadow-2xl z-50 group"
-      >
-        <MessageCircle className="w-6 h-6 text-white group-hover:animate-bounce" />
-        <div className="absolute -top-2 -right-2 w-4 h-4 bg-sei-gold rounded-full animate-pulse" />
-      </motion.button>
-    );
-  }
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 100, scale: 0.8 }}
-      animate={{ 
-        opacity: 1, 
-        y: 0, 
-        scale: 1,
-        height: isMinimized ? 'auto' : '500px'
-      }}
-      className="fixed bottom-6 right-6 w-96 glass-card rounded-2xl shadow-2xl z-50 overflow-hidden"
-    >
-      {/* Header */}
-      <div className="bg-sei-gradient p-4 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-            <Bot className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-white">Sei Assistant</h3>
-            <p className="text-xs text-white/80">Always online</p>
-          </div>
-        </div>
+    <>
+      {/* Chat Toggle Button */}
+      <motion.button
+        className={`chat-toggle ${isOpen ? 'open' : ''}`}
+        onClick={() => setIsOpen(!isOpen)}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        animate={{ 
+          rotate: isOpen ? 180 : 0,
+          backgroundColor: isOpen ? '#dc2626' : '#ffd700'
+        }}
+        transition={{ duration: 0.3 }}
+      >
+        <AnimatePresence mode="wait">
+          {isOpen ? (
+            <motion.div
+              key="close"
+              initial={{ rotate: -90, opacity: 0 }}
+              animate={{ rotate: 0, opacity: 1 }}
+              exit={{ rotate: 90, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <X size={24} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="chat"
+              initial={{ rotate: 90, opacity: 0 }}
+              animate={{ rotate: 0, opacity: 1 }}
+              exit={{ rotate: -90, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <MessageCircle size={24} />
+            </motion.div>
+          )}
+        </AnimatePresence>
         
-        <div className="flex items-center space-x-2">
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setIsMinimized(!isMinimized)}
-            className="p-1 hover:bg-white/10 rounded"
-          >
-            {isMinimized ? (
-              <Maximize2 className="w-4 h-4 text-white" />
-            ) : (
-              <Minimize2 className="w-4 h-4 text-white" />
-            )}
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setIsOpen(false)}
-            className="p-1 hover:bg-white/10 rounded"
-          >
-            <X className="w-4 h-4 text-white" />
-          </motion.button>
-        </div>
-      </div>
+        {/* Notification dot */}
+        {!isOpen && (
+          <motion.div 
+            className="notification-dot"
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+        )}
+      </motion.button>
 
+      {/* Chat Window */}
       <AnimatePresence>
-        {!isMinimized && (
+        {isOpen && (
           <motion.div
-            initial={{ height: 0 }}
-            animate={{ height: 'auto' }}
-            exit={{ height: 0 }}
-            className="flex flex-col h-96"
+            className="chat-widget"
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
           >
+            {/* Header */}
+            <div className="chat-header">
+              <div className="chat-header-info">
+                <div className="bot-avatar">
+                  <Bot size={20} />
+                </div>
+                <div>
+                  <h3 className="chat-title">Sei Assistant</h3>
+                  <div className="chat-status">
+                    <div className="status-dot online" />
+                    <span>Online</span>
+                  </div>
+                </div>
+              </div>
+              <motion.button
+                className="chat-close"
+                onClick={() => setIsOpen(false)}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <X size={18} />
+              </motion.button>
+            </div>
+
             {/* Messages */}
-            <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-              {messages.map((msg) => (
-                <motion.div
-                  key={msg.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div className={`flex items-start space-x-2 max-w-xs ${
-                    msg.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''
-                  }`}>
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                      msg.sender === 'user' 
-                        ? 'bg-sei-500' 
-                        : 'bg-sei-gold'
-                    }`}>
-                      {msg.sender === 'user' ? (
-                        <User className="w-3 h-3 text-white" />
+            <div className="chat-messages">
+              <AnimatePresence>
+                {messages.map((message) => (
+                  <motion.div
+                    key={message.id}
+                    className={`message ${message.sender}`}
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div className="message-avatar">
+                      {message.sender === 'user' ? (
+                        <User size={16} />
                       ) : (
-                        <Bot className="w-3 h-3 text-white" />
+                        <Bot size={16} />
                       )}
                     </div>
-                    
-                    <div className={`p-3 rounded-2xl ${
-                      msg.sender === 'user'
-                        ? 'bg-sei-500 text-white'
-                        : 'bg-white/10 text-white'
-                    }`}>
-                      <p className="text-sm whitespace-pre-line">{msg.text}</p>
-                      <p className="text-xs opacity-70 mt-1">
-                        {msg.timestamp.toLocaleTimeString()}
-                      </p>
+                    <div className="message-content">
+                      <div className="message-text">
+                        {message.content.split('\n').map((line, index) => (
+                          <React.Fragment key={index}>
+                            {line}
+                            {index < message.content.split('\n').length - 1 && <br />}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                      <div className="message-time">
+                        {message.timestamp.toLocaleTimeString([], { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })}
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
-              
-              {/* Typing Indicator */}
-              {isTyping && (
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+
+              {/* Loading indicator */}
+              {isLoading && (
                 <motion.div
+                  className="message bot"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex justify-start"
                 >
-                  <div className="flex items-start space-x-2">
-                    <div className="w-6 h-6 bg-sei-gold rounded-full flex items-center justify-center">
-                      <Bot className="w-3 h-3 text-white" />
-                    </div>
-                    <div className="bg-white/10 p-3 rounded-2xl">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                      </div>
+                  <div className="message-avatar">
+                    <Bot size={16} />
+                  </div>
+                  <div className="message-content">
+                    <div className="typing-indicator">
+                      <span></span>
+                      <span></span>
+                      <span></span>
                     </div>
                   </div>
                 </motion.div>
               )}
-              
+
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Quick Commands */}
-            <div className="px-4 py-2 border-t border-white/10">
-              <div className="flex space-x-2 mb-3">
-                {quickCommands.map((cmd) => {
-                  const Icon = cmd.icon;
-                  return (
+            {/* Quick Actions - Only show when there's just the welcome message */}
+            {messages.length === 1 && !isLoading && (
+              <motion.div
+                className="quick-actions"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <span className="quick-actions-label">Quick actions:</span>
+                <div className="quick-actions-grid">
+                  {quickActions.map((action, index) => (
                     <motion.button
-                      key={cmd.command}
+                      key={action.label}
+                      className="quick-action-btn"
+                      onClick={() => handleQuickAction(action.command)}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.4 + index * 0.1 }}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => handleQuickCommand(cmd.command)}
-                      className="flex items-center space-x-1 px-3 py-1 bg-white/10 rounded-full text-xs text-white hover:bg-white/20 transition-colors"
                     >
-                      <Icon className="w-3 h-3" />
-                      <span>{cmd.label}</span>
+                      {action.icon}
+                      <span>{action.label}</span>
                     </motion.button>
-                  );
-                })}
-              </div>
-            </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
 
             {/* Input */}
-            <div className="p-4 border-t border-white/10">
-              <div className="flex space-x-2">
+            <div className="chat-input-container">
+              <div className="chat-input-wrapper">
                 <input
+                  ref={inputRef}
                   type="text"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Ask about tokens, balances, network..."
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Ask about tokens, blocks, or transactions..."
-                  className="flex-1 px-3 py-2 bg-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-sei-500 text-white placeholder-gray-400 text-sm"
+                  className="chat-input"
+                  disabled={isLoading}
                 />
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={sendMessage}
-                  disabled={!message.trim() || isTyping}
-                  className="p-2 bg-sei-gradient rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`send-btn ${inputValue.trim() && !isLoading ? 'active' : ''}`}
+                  onClick={() => handleSendMessage()}
+                  disabled={!inputValue.trim() || isLoading}
+                  whileHover={{ scale: inputValue.trim() && !isLoading ? 1.1 : 1 }}
+                  whileTap={{ scale: inputValue.trim() && !isLoading ? 0.9 : 1 }}
+                  animate={{ 
+                    backgroundColor: inputValue.trim() && !isLoading ? '#dc2626' : '#374151',
+                    color: inputValue.trim() && !isLoading ? '#fff' : '#9ca3af'
+                  }}
                 >
-                  <Send className="w-4 h-4 text-white" />
+                  <Send size={16} />
                 </motion.button>
+              </div>
+              <div className="chat-footer">
+                <span>Powered by Sei MCP Server</span>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </>
   );
 };
+
+export default ChatWidget;
