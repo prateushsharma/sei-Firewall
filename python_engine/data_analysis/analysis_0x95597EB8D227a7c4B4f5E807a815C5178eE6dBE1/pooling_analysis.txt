@@ -1,5 +1,5 @@
 Pooling Analysis for Token: 0x95597EB8D227a7c4B4f5E807a815C5178eE6dBE1
-Analysis started: 2025-08-23T03:18:00.757624
+Analysis started: 2025-08-24T05:43:26.249671
 ============================================================
 
 🔍 Analyzing transaction patterns...
@@ -46,8 +46,8 @@ Analysis started: 2025-08-23T03:18:00.757624
    🚨 HIGH RISK: Strong evidence of artificial pooling/wash trading
    Multiple suspicious patterns detected across different analysis dimensions
 
-💾 Results saved in: data_analysis\analysis_0x95597EB8D227a7c4B4f5E807a815C5178eE6dBE1
-📊 Visualizations: data_analysis\analysis_0x95597EB8D227a7c4B4f5E807a815C5178eE6dBE1\images
+💾 Results saved in: data_analysis/analysis_0x95597EB8D227a7c4B4f5E807a815C5178eE6dBE1
+📊 Visualizations: data_analysis/analysis_0x95597EB8D227a7c4B4f5E807a815C5178eE6dBE1/images
 
-✅ Analysis completed: 2025-08-23T03:18:09.454472
-📁 Complete results saved in: data_analysis\analysis_0x95597EB8D227a7c4B4f5E807a815C5178eE6dBE1
+✅ Analysis completed: 2025-08-24T05:43:29.277627
+📁 Complete results saved in: data_analysis/analysis_0x95597EB8D227a7c4B4f5E807a815C5178eE6dBE1
