@@ -123,11 +123,12 @@ async def fetch_temp_token_transfers(token_address: str,
                     print("No data received or error occurred")
                     break
                 
-                if 'items' not in data:
+                # Handle new response format - data is under 'data' key instead of 'items'
+                if 'data' not in data:
                     print(f"Unexpected response format: {list(data.keys()) if data else 'No keys'}")
                     break
                 
-                items = data.get('items', [])
+                items = data.get('data', [])
                 
                 if not items:
                     print("Empty items list received")
@@ -155,6 +156,8 @@ async def fetch_temp_token_transfers(token_address: str,
                     print(f"Setting next batch to_date to: {to_date}")
                 
                 # Check if there's more data available via pagination
+                # Note: The new API format might handle pagination differently
+                # For now, we'll continue with the original logic but adapt to new response format
                 if 'next_page_params' in data and data['next_page_params']:
                     next_params = data['next_page_params']
                     current_offset = next_params.get('offset', current_offset + 50)
@@ -196,11 +199,12 @@ async def fetch_temp_token_transfers(token_address: str,
                 print("No data received or error occurred")
                 break
             
-            if 'items' not in data:
+            # Handle new response format - data is under 'data' key instead of 'items'
+            if 'data' not in data:
                 print(f"Unexpected response format: {list(data.keys()) if data else 'No keys'}")
                 break
             
-            items = data.get('items', [])
+            items = data.get('data', [])
             
             if not items:
                 print("Empty items list received")
