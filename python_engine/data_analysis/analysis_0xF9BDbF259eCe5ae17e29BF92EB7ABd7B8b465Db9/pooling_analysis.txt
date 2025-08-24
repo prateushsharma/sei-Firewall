@@ -1,0 +1,53 @@
+Pooling Analysis for Token: 0xF9BDbF259eCe5ae17e29BF92EB7ABd7B8b465Db9
+Analysis started: 2025-08-24T07:18:19.834908
+============================================================
+
+🔍 Analyzing transaction patterns...
+🌐 Analyzing transfer network...
+⏰ Analyzing time anomalies...
+👥 Clustering address behavior...
+📊 Analyzing volume patterns...
+🎨 Generating visualizations...
+
+================================================================================
+🤖 POOLING DETECTION RESULTS
+================================================================================
+
+📈 TRANSACTION PATTERN ANALYSIS:
+   Circular trades detected: 66
+     • 2-node cycles: 9 (Less suspicious - could be simple buy/sell)
+     • 3-node cycles: 16 (Moderately suspicious - suggests coordination)
+     • 4+-node cycles: 21 (Highly suspicious - complex wash trading)
+     • 5+-node cycles: 17 (Highly suspicious - complex wash trading)
+     • 6+-node cycles: 3 (Highly suspicious - complex wash trading)
+   Rapid back-and-forth trades: 0
+   Suspicious address pairs: 15
+   Clustered amounts: 0
+
+⏰ TIME ANOMALY ANALYSIS:
+   Time anomalies detected: 44
+   Justification: Anomalies detected when transactions show unusual timing patterns
+   that deviate from normal trading behavior, suggesting coordinated activity
+
+🌐 NETWORK ANALYSIS:
+   Nodes: 78
+   Edges: 118
+   Communities: 17
+   Network centralization: 0.847
+   Justification: High centralization suggests few addresses control most flow
+
+📊 VOLUME ANALYSIS:
+   Anomalous time periods: 1
+   Total time periods analyzed: 11
+   Justification: Volume spikes indicate coordinated trading activity
+
+⚠️  RISK ASSESSMENT:
+   Overall Risk Score: 73/100
+   ⚠️  MEDIUM RISK: Several suspicious patterns detected
+   Potential wash trading activity requiring further investigation
+
+💾 Results saved in: data_analysis\analysis_0xF9BDbF259eCe5ae17e29BF92EB7ABd7B8b465Db9
+📊 Visualizations: data_analysis\analysis_0xF9BDbF259eCe5ae17e29BF92EB7ABd7B8b465Db9\images
+
+✅ Analysis completed: 2025-08-24T07:18:22.566475
+📁 Complete results saved in: data_analysis\analysis_0xF9BDbF259eCe5ae17e29BF92EB7ABd7B8b465Db9

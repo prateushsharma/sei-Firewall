@@ -1,0 +1,63 @@
+{
+  "nft_metadata": {
+    "token_symbol": "BUMP",
+    "token_name": "WeBump",
+    "parsed_metadata": {
+      "name": "WeBump #4373",
+      "image": "https://arweave.net/D5ihjmdt75TIStMnxoCXduJHDES-QZtgu8ZlsLErv2Q/4373.png",
+      "symbol": "BUMP",
+      "edition": 4373,
+      "attributes": [
+        {
+          "value": "aphrodisiac",
+          "trait_type": "bgbump"
+        },
+        {
+          "value": "cloud",
+          "trait_type": "skinbump"
+        },
+        {
+          "value": "bumpline",
+          "trait_type": "bump"
+        },
+        {
+          "value": "buddha",
+          "trait_type": "dressbump"
+        },
+        {
+          "value": "magnetic",
+          "trait_type": "eyebump"
+        },
+        {
+          "value": "cigarette",
+          "trait_type": "mouthbump"
+        },
+        {
+          "value": "zombie",
+          "trait_type": "headbump"
+        }
+      ],
+      "collection": "WeBump",
+      "description": "Whats poppin? we bumpin"
+    },
+    "contract_address": "0xcf57971769e2abe438c9644655bd7ae0f2f9fec8",
+    "token_id": "4373"
+  },
+  "behavior_analysis": {
+    "time_statistics": {},
+    "time_outliers": [],
+    "rapid_transfers": [],
+    "cyclic_trades": {
+      "two_node_cycles": [],
+      "three_node_cycles": [],
+      "complex_cycles": []
+    },
+    "ownership_patterns": {},
+    "anomalous_addresses": [],
+    "total_transfers": 0,
+    "unique_owners": 0
+  },
+  "analysis_timestamp": "2025-08-24T09:21:17.077145",
+  "contract_address": "0xcf57971769e2abe438c9644655bd7ae0f2f9fec8",
+  "token_id": "4373"
+}

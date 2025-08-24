@@ -1,0 +1,58 @@
+================================================================================
+NFT LIFETIME MOVEMENT ANALYSIS
+================================================================================
+
+NFT: Fucker #1122
+Contract Address: 0x9a1e3d2a010dbe576f9cccd57b2fc0df96c8e44d
+Token ID: 1122
+Description: Ready for a trip?
+
+ATTRIBUTES:
+----------------------------------------
+• Background: Red
+• Body: Split Green Fucker
+• Eyes: Candy Flippin
+• Mouth: It's Beautiful
+• Clothing: Clean Zip Up
+• Hair and Hats: Clown
+
+OWNERSHIP HISTORY:
+----------------------------------------
+Total Transfers: 4
+Unique Owners: 4
+
+MOVEMENT CHAIN (Mint to Current Owner):
+----------------------------------------
+1. MINTED from 0x000000...000000 to 0x479801...6387e2 on 2024-09-13 (TX: 0x09300ca2...ac1abc09)
+2. TRANSFERRED from 0x479801...6387e2 to 0x2ca6d6...bb9e13 on 2024-09-14 (TX: 0xf2c824bf...2d2e2917)
+3. TRANSFERRED from 0x2ca6d6...bb9e13 to 0xfdf5cf...85b93d on 2025-06-21 (TX: 0xdd750201...00524fbb)
+4. TRANSFERRED from 0xfdf5cf...85b93d to 0x622d1d...f4b3ca on 2025-06-21 (TX: 0xdd750201...00524fbb)
+
+OWNERSHIP PATTERNS:
+----------------------------------------
+• 0x479801...6387e2: 1 ownership(s), total 0.0 hours, first acquired: 2024-09-13 14:31:05
+• 0x2ca6d6...bb9e13: 1 ownership(s), total 0.0 hours, first acquired: 2024-09-14 22:06:43
+• 0xfdf5cf...85b93d: 1 ownership(s), total 0.0 hours, first acquired: 2025-06-21 15:30:27
+• 0x622d1d...f4b3ca: 1 ownership(s), total 0.0 hours, first acquired: 2025-06-21 15:30:27
+
+TIME STATISTICS:
+----------------------------------------
+Mean ownership duration: 2248.3 hours
+Median ownership duration: 31.6 hours
+Shortest ownership: 0.0 hours
+Longest ownership: 6713.4 hours
+Standard deviation: 3157.3 hours
+
+
+RAPID TRANSFERS DETECTED:
+----------------------------------------
+• {'from_transfer': 2, 'to_transfer': 3, 'time_diff_seconds': 0.0, 'time_diff_hours': 0.0, 'time_diff_days': 0.0, 'from_address': '0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d', 'to_address': '0x622d1db5d60d8981abcb4ca0c726098abcf4b3ca', 'timestamp_current': '2025-06-21 15:30:27+00:00', 'timestamp_previous': '2025-06-21 15:30:27+00:00', 'suspicion_level': 'HIGH', 'reason': 'Transfer occurred within 0.00 hours'}
+
+MEDIA FILES:
+----------------------------------------
+Downloaded 2 image(s) to nft_image directory:
+• 1122_0.png
+• 1122_1.png
+
+Analysis generated on: 2025-08-24 09:57:43
+================================================================================

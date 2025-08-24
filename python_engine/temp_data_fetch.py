@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+MCP_SERVER_IP = os.getenv("MCP_SERVER_IP")
+
 async def fetch_temp_token_transfers(token_address: str, 
                                chain_id: str = "pacific-1",
                                max_entries: int = 500) -> List[Dict]:
@@ -21,7 +23,7 @@ async def fetch_temp_token_transfers(token_address: str,
         return data_dir / f"token_transfers_{token_addr}.json"
     
     def build_url(token_addr: str) -> str:
-        return f"http://10.189.108.214:3001/api/token/{token_addr}/transfers"
+        return f"http://{MCP_SERVER_IP}/api/token/{token_addr}/transfers"
     
     async def fetch_transfers(session: aiohttp.ClientSession, url: str, 
                              from_date: Optional[str] = None, 
@@ -81,7 +83,6 @@ async def fetch_temp_token_transfers(token_address: str,
             "requests_made": 1,
             "transfers": transfers,
             "metadata": {
-                "retrieved_at": "2025-08-24T00:42:17.496Z",  # You might want to update this dynamically
                 "api_source": "seitrace.com",
                 "rate_limit_friendly": True
             }

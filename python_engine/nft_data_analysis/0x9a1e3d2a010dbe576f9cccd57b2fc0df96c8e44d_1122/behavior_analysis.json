@@ -54,16 +54,30 @@
   },
   "behavior_analysis": {
     "time_statistics": {
-      "mean_hours": 3372.494722222222,
-      "median_hours": 3372.494722222222,
-      "std_hours": 3340.900833333333,
-      "min_hours": 31.593888888888888,
+      "mean_hours": 2248.3298148148147,
+      "median_hours": 31.593888888888888,
+      "std_hours": 3157.3046094526344,
+      "min_hours": 0.0,
       "max_hours": 6713.395555555556,
-      "q1_hours": 1702.0443055555556,
-      "q3_hours": 5042.945138888889
+      "q1_hours": 15.796944444444444,
+      "q3_hours": 3372.494722222222
     },
     "time_outliers": [],
-    "rapid_transfers": [],
+    "rapid_transfers": [
+      {
+        "from_transfer": 2,
+        "to_transfer": 3,
+        "time_diff_seconds": 0.0,
+        "time_diff_hours": 0.0,
+        "time_diff_days": 0.0,
+        "from_address": "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
+        "to_address": "0x622d1db5d60d8981abcb4ca0c726098abcf4b3ca",
+        "timestamp_current": "2025-06-21 15:30:27+00:00",
+        "timestamp_previous": "2025-06-21 15:30:27+00:00",
+        "suspicion_level": "HIGH",
+        "reason": "Transfer occurred within 0.00 hours"
+      }
+    ],
     "cyclic_trades": {
       "two_node_cycles": [],
       "three_node_cycles": [],
@@ -96,13 +110,22 @@
         ],
         "first_acquired": "2025-06-21 15:30:27+00:00",
         "last_transferred": "2025-06-21 15:30:27+00:00"
+      },
+      "0x622d1db5d60d8981abcb4ca0c726098abcf4b3ca": {
+        "ownership_count": 1,
+        "total_duration_hours": 0.0,
+        "transactions": [
+          "0xdd7502013b5a298618c84b0e1af8aa0dea012a63096a41ab3e208d5100524fbb"
+        ],
+        "first_acquired": "2025-06-21 15:30:27+00:00",
+        "last_transferred": "2025-06-21 15:30:27+00:00"
       }
     },
     "anomalous_addresses": [],
-    "total_transfers": 3,
-    "unique_owners": 3
+    "total_transfers": 4,
+    "unique_owners": 4
   },
-  "analysis_timestamp": "2025-08-24T05:23:59.905751",
+  "analysis_timestamp": "2025-08-24T09:57:41.434548",
   "contract_address": "0x9a1e3d2a010dbe576f9cccd57b2fc0df96c8e44d",
   "token_id": "1122"
 }
