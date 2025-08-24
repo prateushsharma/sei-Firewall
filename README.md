@@ -209,13 +209,6 @@ POST /api/nft/{address}/transfers/batch
 
 #### **Enhanced MCP Server Capabilities:**
 
-**Core Blockchain Operations (Existing):**
-- `get_balance` - Native SEI token balances
-- `get_erc20_balance` - ERC20 token balances  
-- `get_transaction` - Transaction details by hash
-- `get_latest_block` - Current network state
-- `get_chain_info` - Network information
-
 **NEW Advanced Analytics Operations:**
 - `get_token_transfers` - Complete ERC20 transfer history
 - `get_nft_transfers` - NFT lifecycle tracking
