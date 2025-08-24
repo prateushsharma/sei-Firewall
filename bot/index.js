@@ -1,15 +1,14 @@
 require('dotenv').config();
 const { Telegraf } = require('telegraf');
-const { fetchTransfers } = require('./api');
+const { fetchTransfers, processApiResponse } = require('./api');
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 if (!BOT_TOKEN) {
-  console.error('Missing BOT_TOKEN in .env'); process.exit(1);
+  console.error('Missing BOT_TOKEN in .env'); 
+  process.exit(1);
 }
 
 const bot = new Telegraf(BOT_TOKEN);
-const { initMCP, callTool,readResource, listResources  } = require('./mcpClient');
-initMCP({ log: true }); // start SSE connection on bot launch
 
 /* -------------------------
    Tiny UI helpers (inline)
@@ -19,15 +18,18 @@ function fmtHash(h, len = 10) {
   const s = String(h);
   return s.length <= len * 2 + 3 ? s : `${s.slice(0, len)}…${s.slice(-len)}`;
 }
+
 function fmtAddr(addr) {
   return addr?.address_hash ? fmtHash(addr.address_hash, 6) : '—';
 }
+
 function fmtNum(x, digits = 4) {
   if (x == null) return '—';
   const n = Number(x);
   if (Number.isNaN(n)) return String(x);
   return Intl.NumberFormat('en-IN', { maximumFractionDigits: digits }).format(n);
 }
+
 function fmtINDate(iso, withTime = true) {
   if (!iso) return '—';
   try {
@@ -41,6 +43,7 @@ function fmtINDate(iso, withTime = true) {
     return iso;
   }
 }
+
 function summarizeTransfers(items = []) {
   const total = items.length;
   let totalAmount = 0;
@@ -56,6 +59,7 @@ function summarizeTransfers(items = []) {
     if (it?.from?.address_hash) uniqueSenders.add(it.from.address_hash.toLowerCase());
     if (it?.to?.address_hash) uniqueReceivers.add(it.to.address_hash.toLowerCase());
   }
+  
   const top = [...bySymbol.entries()]
     .sort((a,b) => b[1]-a[1])
     .slice(0,3)
@@ -69,16 +73,19 @@ function summarizeTransfers(items = []) {
     uniqueReceivers: uniqueReceivers.size,
   };
 }
-function renderSummaryCard(tokenAddress, items = []) {
+
+function renderSummaryCard(tokenAddress, items = [], totalTransfers = 0) {
   const s = summarizeTransfers(items);
   return [
     `*Token:* \`${tokenAddress}\``,
-    `*Total transfers:* ${s.total}`,
+    `*Total transfers found:* ${totalTransfers}`,
+    `*Data shown:* ${s.total} transfers`,
     `*Unique senders:* ${s.uniqueSenders}   |   *Unique receivers:* ${s.uniqueReceivers}`,
     `*Top symbols by volume:* ${s.topSymbolsLine}`,
     `*Aggregate amount (all symbols):* ${fmtNum(s.totalAmount)}`,
   ].join('\n');
 }
+
 function renderTransfersPage(items = [], page = 0, pageSize = 5) {
   const start = page * pageSize;
   const slice = items.slice(start, start + pageSize);
@@ -103,6 +110,7 @@ function renderTransfersPage(items = [], page = 0, pageSize = 5) {
 
   return lines.join('\n\n');
 }
+
 function toCSV(items = []) {
   const headers = [
     'timestamp','token_symbol','amount','from','to','tx_hash','block_height','token_contract'
@@ -124,29 +132,40 @@ function toCSV(items = []) {
 /* -------------------------
    Session + keyboard
 --------------------------*/
-const sessions = new Map(); // key: chatId, val: { token, data, page }
-function makeKeyboard(page, total, pageSize = 5) {
+const sessions = new Map(); // key: chatId, val: { token, data, page, images, results }
+
+function makeKeyboard(page, total, pageSize = 5, hasImages = false) {
   const maxPage = Math.max(0, Math.ceil(total / pageSize) - 1);
   const prev = Math.max(0, page - 1);
   const next = Math.min(maxPage, page + 1);
 
-  return {
-    inline_keyboard: [
-      [
-        { text: '📊 Summary', callback_data: 'view:summary' },
-        { text: '📄 List', callback_data: 'view:list' },
-      ],
-      [
-        { text: '⬅️ Prev', callback_data: `nav:${prev}` },
-        { text: `Page ${page + 1}/${maxPage + 1}`, callback_data: 'noop' },
-        { text: 'Next ➡️', callback_data: `nav:${next}` },
-      ],
-      [
-        { text: '⬇️ CSV', callback_data: 'export:csv' },
-        { text: '⬇️ JSON', callback_data: 'export:json' },
-      ]
+  const baseKeyboard = [
+    [
+      { text: '📊 Summary', callback_data: 'view:summary' },
+      { text: '📄 List', callback_data: 'view:list' },
+    ],
+    [
+      { text: '⬅️ Prev', callback_data: `nav:${prev}` },
+      { text: `Page ${page + 1}/${maxPage + 1}`, callback_data: 'noop' },
+      { text: 'Next ➡️', callback_data: `nav:${next}` },
     ]
-  };
+  ];
+
+  // Add images row if available
+  if (hasImages) {
+    baseKeyboard.push([
+      { text: '📈 Charts', callback_data: 'view:charts' },
+      { text: '🕸️ Network', callback_data: 'view:network' },
+    ]);
+  }
+
+  // Add export options
+  baseKeyboard.push([
+    { text: '⬇️ CSV', callback_data: 'export:csv' },
+    { text: '⬇️ JSON', callback_data: 'export:json' },
+  ]);
+
+  return { inline_keyboard: baseKeyboard };
 }
 
 /* -------------------------
@@ -162,10 +181,10 @@ bot.start((ctx) => {
 bot.help((ctx) => {
   ctx.reply([
     'commands:',
-    '/ping – quick check',
-    '/echo <text> – I repeat what you say',
-    '/id – show chat/user ids',
-    '/transfers <token_address> – fetch transfers via API with UI',
+    '/ping — quick check',
+    '/echo <text> — I repeat what you say',
+    '/id — show chat/user ids',
+    '/transfers <token_address> — fetch transfers via API with enhanced charts & UI',
   ].join('\n'));
 });
 
@@ -187,46 +206,72 @@ bot.command('id', (ctx) => {
 });
 
 /* -------------------------
-   /transfers command (UI)
+   Enhanced /transfers command 
 --------------------------*/
-// /transfers <token_address>
 bot.command('transfers', async (ctx) => {
   const arg = ctx.message.text.replace(/^\/transfers(@\w+)?\s*/i, '').trim();
   if (!arg) return ctx.reply('usage: /transfers 0xYourTokenAddress');
 
-  const waitMsg = await ctx.reply('fetching transfers…');
+  const waitMsg = await ctx.reply('🔍 Fetching transfers and generating charts…');
 
   try {
-    const res = await fetchTransfers(arg);
+    // Fetch data from new API endpoint
+    const apiResponse = await fetchTransfers(arg);
+    const processedResponse = processApiResponse(apiResponse);
 
-    // token_data could be Array OR object with items
-    const items = Array.isArray(res?.token_data)
-      ? res.token_data
-      : (res?.token_data?.items || res?.token_data || []);
-    const tokenAddr = res?.token_address || arg;
+    // Extract data from response
+    const tokenAddr = processedResponse.token_address || arg;
+    const totalTransfers = processedResponse.total_transfers || 0;
+    const results = processedResponse.results || 'Transfer data retrieved successfully.';
+    
+    // Handle different possible data structures
+    const items = Array.isArray(processedResponse.token_data)
+      ? processedResponse.token_data
+      : (processedResponse.token_data?.items || processedResponse.token_data || []);
 
-    sessions.set(ctx.chat.id, { token: tokenAddr, data: items, page: 0 });
+    // Store in session with enhanced data
+    sessions.set(ctx.chat.id, { 
+      token: tokenAddr, 
+      data: items, 
+      page: 0,
+      images: processedResponse.processedImages || {},
+      results: results,
+      totalTransfers: totalTransfers
+    });
 
-    const summary = renderSummaryCard(tokenAddr, items);
+    // Send summary with enhanced information
+    const summaryText = [
+      renderSummaryCard(tokenAddr, items, totalTransfers),
+      '',
+      `📊 *Analysis Results:*`,
+      results
+    ].join('\n');
+
+    const hasImages = Object.keys(processedResponse.processedImages || {}).length > 0;
+
     await ctx.telegram.editMessageText(
       waitMsg.chat.id,
       waitMsg.message_id,
       undefined,
-      summary,
-      { parse_mode: 'Markdown', reply_markup: makeKeyboard(0, items.length) }
+      summaryText,
+      { 
+        parse_mode: 'Markdown', 
+        reply_markup: makeKeyboard(0, items.length, 5, hasImages) 
+      }
     );
+
   } catch (err) {
     await ctx.telegram.editMessageText(
       waitMsg.chat.id,
       waitMsg.message_id,
       undefined,
-      `❌ error: ${err.message || String(err)}`
+      `❌ Error: ${err.message || String(err)}`
     );
   }
 });
 
 /* -------------------------
-   Inline button handlers
+   Enhanced inline button handlers
 --------------------------*/
 bot.on('callback_query', async (ctx) => {
   const chatId = ctx.chat.id;
@@ -245,37 +290,76 @@ bot.on('callback_query', async (ctx) => {
       return;
     }
 
+    // View handlers
     if (data.startsWith('view:')) {
       const view = data.split(':')[1];
+      const hasImages = Object.keys(sess.images || {}).length > 0;
+
       if (view === 'summary') {
-        const text = renderSummaryCard(sess.token, sess.data);
-        await ctx.telegram.editMessageText(msg.chat.id, msg.message_id, undefined, text, {
+        const summaryText = [
+          renderSummaryCard(sess.token, sess.data, sess.totalTransfers),
+          '',
+          `📊 *Analysis Results:*`,
+          sess.results
+        ].join('\n');
+
+        await ctx.telegram.editMessageText(msg.chat.id, msg.message_id, undefined, summaryText, {
           parse_mode: 'Markdown',
-          reply_markup: makeKeyboard(sess.page, sess.data.length),
+          reply_markup: makeKeyboard(sess.page, sess.data.length, 5, hasImages),
         });
-      } else if (view === 'list') {
+      } 
+      else if (view === 'list') {
         const text = renderTransfersPage(sess.data, sess.page);
         await ctx.telegram.editMessageText(msg.chat.id, msg.message_id, undefined, text, {
           parse_mode: 'Markdown',
-          reply_markup: makeKeyboard(sess.page, sess.data.length),
+          reply_markup: makeKeyboard(sess.page, sess.data.length, 5, hasImages),
         });
       }
+      else if (view === 'charts') {
+        // Send chart images
+        if (sess.images.amount_distribution) {
+          await ctx.replyWithPhoto(
+            { source: sess.images.amount_distribution },
+            { caption: '💰 Amount Distribution Analysis' }
+          );
+        }
+        if (sess.images.volume_time) {
+          await ctx.replyWithPhoto(
+            { source: sess.images.volume_time },
+            { caption: '📈 Volume Over Time Analysis' }
+          );
+        }
+      }
+      else if (view === 'network') {
+        // Send network graph
+        if (sess.images.network_graph) {
+          await ctx.replyWithPhoto(
+            { source: sess.images.network_graph },
+            { caption: '🕸️ Transfer Network Graph' }
+          );
+        }
+      }
+      
       await ctx.answerCbQuery();
       return;
     }
 
+    // Navigation handler
     if (data.startsWith('nav:')) {
       const nextPage = Math.max(0, parseInt(data.split(':')[1], 10) || 0);
       sess.page = nextPage;
       const text = renderTransfersPage(sess.data, sess.page);
+      const hasImages = Object.keys(sess.images || {}).length > 0;
+      
       await ctx.telegram.editMessageText(msg.chat.id, msg.message_id, undefined, text, {
         parse_mode: 'Markdown',
-        reply_markup: makeKeyboard(sess.page, sess.data.length),
+        reply_markup: makeKeyboard(sess.page, sess.data.length, 5, hasImages),
       });
       await ctx.answerCbQuery(`Page ${sess.page + 1}`);
       return;
     }
 
+    // Export handlers
     if (data.startsWith('export:')) {
       const type = data.split(':')[1];
       if (type === 'csv') {
@@ -285,7 +369,13 @@ bot.on('callback_query', async (ctx) => {
           filename: `transfers_${sess.token}.csv`,
         });
       } else if (type === 'json') {
-        const jsonStr = JSON.stringify(sess.data, null, 2);
+        const jsonStr = JSON.stringify({
+          token_address: sess.token,
+          total_transfers: sess.totalTransfers,
+          results: sess.results,
+          data: sess.data,
+          generated_at: new Date().toISOString()
+        }, null, 2);
         await ctx.replyWithDocument({
           source: Buffer.from(jsonStr, 'utf8'),
           filename: `transfers_${sess.token}.json`,
@@ -302,36 +392,9 @@ bot.on('callback_query', async (ctx) => {
   }
 });
 
-bot.command('get_transfers', async (ctx) => {
-  const token = ctx.message.text.replace(/^\/get_transfers(@\w+)?\s*/i, '').trim();
-  if (!token) return ctx.reply('usage: /get_transfers 0xYourTokenAddress');
-
-  const wait = await ctx.reply('Querying MCP get_token_transfers…');
-
-  try {
-    // const resp = await callTool('get_token_transfers', { token_address: token });
-    const resp = await callTool('get_token_transfers', { tokenAddress: token });
-
-    await ctx.telegram.editMessageText(
-      wait.chat.id,
-      wait.message_id,
-      undefined,
-      '```json\n' + JSON.stringify(resp, null, 2).slice(0, 3500) + '\n```',
-      { parse_mode: 'Markdown' }
-    );
-  } catch (e) {
-    await ctx.telegram.editMessageText(
-      wait.chat.id,
-      wait.message_id,
-      undefined,
-      `❌ MCP error: ${e.message}`
-    );
-  }
-});
-
 /* -------------------------
    Launch
 --------------------------*/
-bot.launch().then(() => console.log('Bot running with polling ✅'));
+bot.launch().then(() => console.log('Enhanced Bot running with new API & image support ✅'));
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
