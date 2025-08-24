@@ -62,6 +62,8 @@ async def fetch_nft_images(token_address: str, token_id: str) -> Dict[str, any]:
         else:
             result[key] = None  # gracefully handle missing file
 
+    base_dir = f"nft_data_analysis/{token_address}_{token_id}"
+
     # NFT images directory
     nft_images_dir = os.path.join(base_dir, "nft_image")
     nft_images: List[str] = []
