@@ -1,0 +1,52 @@
+Pooling Analysis for Token: 0x0a526e425809aEA71eb279d24ae22Dee6C92A4Fe
+Analysis started: 2025-08-24T06:52:59.911605
+============================================================
+
+⏰ Analyzing time anomalies...
+🔍 Analyzing transaction patterns...
+👥 Clustering address behavior...
+🌐 Analyzing transfer network...
+🎨 Generating visualizations...
+
+================================================================================
+🤖 POOLING DETECTION RESULTS
+================================================================================
+
+📈 TRANSACTION PATTERN ANALYSIS:
+   Circular trades detected: 37
+     • 2-node cycles: 8 (Less suspicious - could be simple buy/sell)
+     • 3-node cycles: 7 (Moderately suspicious - suggests coordination)
+     • 4+-node cycles: 8 (Highly suspicious - complex wash trading)
+     • 5+-node cycles: 2 (Highly suspicious - complex wash trading)
+     • 6+-node cycles: 12 (Highly suspicious - complex wash trading)
+   Rapid back-and-forth trades: 3
+   Suspicious address pairs: 8
+   Clustered amounts: 0
+
+⏰ TIME ANOMALY ANALYSIS:
+   Time anomalies detected: 29
+   Justification: Anomalies detected when transactions show unusual timing patterns
+   that deviate from normal trading behavior, suggesting coordinated activity
+
+🌐 NETWORK ANALYSIS:
+   Nodes: 116
+   Edges: 154
+   Communities: 11
+   Network centralization: 1.804
+   Justification: High centralization suggests few addresses control most flow
+
+📊 VOLUME ANALYSIS:
+   Anomalous time periods: 0
+   Total time periods analyzed: 5
+   Justification: Volume spikes indicate coordinated trading activity
+
+⚠️  RISK ASSESSMENT:
+   Overall Risk Score: 68.5/100
+   ⚠️  MEDIUM RISK: Several suspicious patterns detected
+   Potential wash trading activity requiring further investigation
+
+💾 Results saved in: data_analysis\analysis_0x0a526e425809aEA71eb279d24ae22Dee6C92A4Fe
+📊 Visualizations: data_analysis\analysis_0x0a526e425809aEA71eb279d24ae22Dee6C92A4Fe\images
+
+✅ Analysis completed: 2025-08-24T06:53:05.416440
+📁 Complete results saved in: data_analysis\analysis_0x0a526e425809aEA71eb279d24ae22Dee6C92A4Fe

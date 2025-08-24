@@ -21,13 +21,11 @@ async def fetch_temp_token_transfers(token_address: str,
         return data_dir / f"token_transfers_{token_addr}.json"
     
     def build_url(token_addr: str) -> str:
-        return f"http://0.0.0.0:3001/api/token/{token_addr}/transfers"
+        return f"http://10.189.108.214:3001/api/token/{token_addr}/transfers"
     
     async def fetch_transfers(session: aiohttp.ClientSession, url: str, 
                              from_date: Optional[str] = None, 
-                             to_date: Optional[str] = None,
-                             limit: int = 50,
-                             offset: int = 0) -> Optional[Dict]:
+                             to_date: Optional[str] = None) -> Optional[Dict]:
         # Prepare JSON payload
         payload = {}
         if from_date:
@@ -72,11 +70,21 @@ async def fetch_temp_token_transfers(token_address: str,
     def save_transfers(token_addr: str, chain_id: str, transfers: List[Dict]):
         json_path = get_json_path(token_addr)
         
+        # Create the data structure that matches our expected format
         data = {
+            "success": True,
             "token_address": token_addr,
             "chain_id": chain_id,
+            "from_date": None,
+            "to_date": None,
             "total_transfers": len(transfers),
-            "transfers": transfers
+            "requests_made": 1,
+            "transfers": transfers,
+            "metadata": {
+                "retrieved_at": "2025-08-24T00:42:17.496Z",  # You might want to update this dynamically
+                "api_source": "seitrace.com",
+                "rate_limit_friendly": True
+            }
         }
         
         with open(json_path, 'w', encoding='utf-8') as f:
@@ -99,39 +107,42 @@ async def fetch_temp_token_transfers(token_address: str,
     # Build the URL once
     url = build_url(token_address)
     
-    # Case 1: No existing JSON file - fetch all new transfers
+    # Case 1: No existing JSON file - fetch all new transfers until max_entries or empty response
     if existing_data is None:
         print("Case 1: No existing JSON file found, fetching all new transfers")
         all_transfers = []
         seen_hashes = set()
-        current_offset = 0
-        to_date = None  # Start with no date range
+        to_date = None  # Start with most recent transfers
         
         async with aiohttp.ClientSession() as session:
             while len(all_transfers) < max_entries:
-                print(f"Fetching batch with offset {current_offset}...")
+                print(f"Fetching batch... (current total: {len(all_transfers)})")
                 
-                data = await fetch_transfers(
+                response_data = await fetch_transfers(
                     session=session,
                     url=url,
-                    to_date=to_date,  # Use dynamic to_date for pagination
-                    limit=50,
-                    offset=current_offset
+                    to_date=to_date
                 )
                 
-                if not data:
+                if not response_data:
                     print("No data received or error occurred")
                     break
                 
-                # Handle new response format - data is under 'data' key instead of 'items'
-                if 'data' not in data:
-                    print(f"Unexpected response format: {list(data.keys()) if data else 'No keys'}")
+                # Extract the actual data from the nested structure
+                if 'data' not in response_data:
+                    print(f"Unexpected response format: {list(response_data.keys()) if response_data else 'No keys'}")
                     break
                 
-                items = data.get('data', [])
+                data = response_data['data']
+                
+                if 'transfers' not in data:
+                    print(f"Unexpected data format: {list(data.keys()) if data else 'No keys'}")
+                    break
+                
+                items = data.get('transfers', [])
                 
                 if not items:
-                    print("Empty items list received")
+                    print("Empty items list received - termination condition reached")
                     break
                 
                 # Filter out duplicates and add new transfers
@@ -154,16 +165,8 @@ async def fetch_temp_token_transfers(token_address: str,
                 if items and 'timestamp' in items[-1]:
                     to_date = items[-1]['timestamp']
                     print(f"Setting next batch to_date to: {to_date}")
-                
-                # Check if there's more data available via pagination
-                # Note: The new API format might handle pagination differently
-                # For now, we'll continue with the original logic but adapt to new response format
-                if 'next_page_params' in data and data['next_page_params']:
-                    next_params = data['next_page_params']
-                    current_offset = next_params.get('offset', current_offset + 50)
-                    print(f"Next offset: {current_offset}")
                 else:
-                    print("No more pages available")
+                    print("No timestamp found in last item, stopping")
                     break
                 
                 await asyncio.sleep(1)
@@ -179,35 +182,38 @@ async def fetch_temp_token_transfers(token_address: str,
     
     new_transfers = []
     seen_hashes = set()
-    current_offset = 0
     to_date = None  # Start with most recent transfers
     common_found = False
     
     async with aiohttp.ClientSession() as session:
         while len(new_transfers) < max_entries and not common_found:
-            print(f"Fetching batch with offset {current_offset}...")
+            print(f"Fetching batch... (current new transfers: {len(new_transfers)})")
             
-            data = await fetch_transfers(
+            response_data = await fetch_transfers(
                 session=session,
                 url=url,
-                to_date=to_date,  # Use dynamic to_date for pagination
-                limit=50,
-                offset=current_offset
+                to_date=to_date
             )
             
-            if not data:
+            if not response_data:
                 print("No data received or error occurred")
                 break
             
-            # Handle new response format - data is under 'data' key instead of 'items'
-            if 'data' not in data:
-                print(f"Unexpected response format: {list(data.keys()) if data else 'No keys'}")
+            # Extract the actual data from the nested structure
+            if 'data' not in response_data:
+                print(f"Unexpected response format: {list(response_data.keys()) if response_data else 'No keys'}")
                 break
             
-            items = data.get('data', [])
+            data = response_data['data']
+            
+            if 'transfers' not in data:
+                print(f"Unexpected data format: {list(data.keys()) if data else 'No keys'}")
+                break
+            
+            items = data.get('transfers', [])
             
             if not items:
-                print("Empty items list received")
+                print("Empty items list received - termination condition reached")
                 break
             
             # Check each item in this batch for duplicates with existing JSON
@@ -223,7 +229,7 @@ async def fetch_temp_token_transfers(token_address: str,
                     print(f"Found matching transaction in JSON: {tx_hash}")
                     batch_matches += 1
                     common_found = True
-                    # Don't break here, count all matches in this batch
+                    # Don't break here, we want to check all items in this batch
                 
                 if tx_hash not in seen_hashes and tx_hash not in existing_hashes:
                     seen_hashes.add(tx_hash)
@@ -248,31 +254,22 @@ async def fetch_temp_token_transfers(token_address: str,
             if items and 'timestamp' in items[-1]:
                 to_date = items[-1]['timestamp']
                 print(f"Setting next batch to_date to: {to_date}")
-            
-            # Check if there's more data available via pagination
-            if 'next_page_params' in data and data['next_page_params']:
-                next_params = data['next_page_params']
-                current_offset = next_params.get('offset', current_offset + 50)
-                print(f"Next offset: {current_offset}")
             else:
-                print("No more pages available")
+                print("No timestamp found in last item, stopping")
                 break
             
             await asyncio.sleep(1)
     
     print(f"Final results: {len(new_transfers)} new transfers found, common transaction found: {common_found}")
     
-    # Case 2: No common entries found - overwrite completely
-    if not common_found and not new_transfers:
-        print("Case 2: No common entries and no new transfers found, keeping existing data")
-        return existing_transfers
-    elif not common_found:
-        print("Case 2: No common entries found, overwriting existing data with new transfers")
+    # Case 2: No common entries found AND we reached max_entries - overwrite completely
+    if not common_found and len(new_transfers) >= max_entries:
+        print("Case 2: No common entries found and reached max limit, overwriting existing data with new transfers")
         save_transfers(token_address, chain_id, new_transfers)
         return new_transfers
     
-    # Case 3: Common entries found - append new unique transfers to existing ones
-    print("Case 3: Common entries found, appending new unique transfers to existing data")
+    # Case 3: Common entries found OR we didn't reach max_entries - append new unique transfers
+    print("Case 3: Common entries found or termination reached, appending new unique transfers to existing data")
     
     if new_transfers:
         # Combine existing transfers with new unique transfers (newest first)

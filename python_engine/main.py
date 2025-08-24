@@ -4,7 +4,7 @@ import uvicorn
 from data_fetch import fetch_token_transfers
 from data_analysis import analyze_token_pooling
 from generate_explanations import analyze_token_transfers
-from fetch_results import read_pooling_analysis
+from fetch_results import read_pooling_analysis, read_images_as_base64
 from nft_fetch import fetch_nft_transfers
 from nft_data_analysis import analyze_nft_movement
 from temp_data_fetch import fetch_temp_token_transfers
@@ -21,11 +21,13 @@ async def fetch_transfers_endpoint(request: TokenRequest):
     await analyze_token_pooling(request.token_address)
     results = await read_pooling_analysis(request.token_address)
     explanation = await analyze_token_transfers(results)
+    image_data = await read_images_as_base64(request.token_address)
     return {
         "token_address": request.token_address,
         "total_transfers": len(transfers),
         "results": explanation,
-        "token_data": transfers
+        "token_data": transfers,
+        "images": image_data
     }
 
 class NFTRequest(BaseModel):

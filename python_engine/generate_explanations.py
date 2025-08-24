@@ -10,27 +10,26 @@ GROQ_API_KEY = os.getenv("GROQ_API")
 async def analyze_token_transfers(results: str):
     client = AsyncGroq(api_key=GROQ_API_KEY)
 
-    prompt = f"""Analyze this token transfer analysis and provide a comprehensive risk assessment summary:
+    prompt = f"""Conduct a rigorous, technical risk assessment of the following token transfer analysis:
 
 {results}
 
-## METRIC EXPLANATIONS (for context):
-- **Circular trades**: Transactions where funds move through multiple addresses and return to origin (A→B→C→A). This indicates artificial volume creation and wash trading.
-- **Rapid back-and-forth**: Immediate reciprocal trading between the same addresses within short timeframes. Suggests price manipulation rather than organic trading.
-- **Suspicious address pairs**: Addresses that trade excessively with each other. Reveals coordinated behavior and potential bot networks.
-- **Time anomalies**: Transactions occurring at non-human intervals or patterns. Indicates automated trading systems.
-- **Network nodes**: Total unique addresses involved in trading.
-- **Network edges**: Total trading relationships between addresses. 
-- **Communities**: Distinct groups of addresses trading primarily among themselves. Multiple communities suggest organized manipulation groups.
-- **Risk score 100/100**: Maximum risk level indicating systematic market manipulation.
+## CONTEXT (definitions of metrics):
+- **Circular trades**: Multi-hop transactions returning to the origin (A→B→C→A). Strong indication of wash trading and synthetic volume generation.
+- **Rapid back-and-forth**: High-frequency bidirectional trades between identical address pairs, implying manipulative cycles.
+- **Suspicious address pairs**: Address dyads with abnormal trade frequency, reflecting non-random coordination or automated behavior.
+- **Time anomalies**: Transaction intervals at deterministic, non-human frequencies, consistent with bot-driven execution.
+- **Network nodes**: Unique addresses involved in transfer activity.
+- **Network edges**: Directed transactional relationships, forming the graph topology.
+- **Communities**: Subgraph clusters with high intra-connectivity, indicative of collusive entities.
+- **Risk score 100/100**: Absolute indication of systemic manipulation patterns.
 
-Based on these explanations, provide a clear, professional summary that:
-1. Explains the findings in simple, accessible language
-2. Assesses the overall safety level of the token (High/Medium/Low risk)
-3. Highlights the most concerning patterns with specific numbers
-4. Gives practical recommendations for users
-5. Uses appropriate emojis for visual clarity
-6. Structures the response with clear sections
+## TASK:
+Produce a concise, **technical summary** that:
+1. Strictly interprets the meaning of the observed data (do not provide recommendations).
+2. Focuses on quantitative findings and their implications in network behavior.
+3. Maintains a highly technical and analytical tone.
+4. Avoids emojis, casual language, or user-facing advice.
 """
 
     completion = await client.chat.completions.create(
@@ -41,9 +40,9 @@ Based on these explanations, provide a clear, professional summary that:
                 "content": prompt
             }
         ],
-        temperature=0.6,
-        max_completion_tokens=1024,
-        top_p=0.95,
+        temperature=0.4,
+        max_completion_tokens=4096,
+        top_p=0.9,
         stream=False,
         reasoning_format="hidden"
     )
