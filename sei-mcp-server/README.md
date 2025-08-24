@@ -56,7 +56,8 @@ POST /api/token/{address}/transfers/batch
           "token_name": "USD Coin",
           "token_decimals": "6"
         }
-      }
+      },
+      // ... more transfers
     ]
   }
 }
@@ -139,7 +140,8 @@ POST /api/nft/{address}/transfers/batch
           "token_name": "Cool NFT Collection",
           "token_symbol": "COOL"
         }
-      }
+      },
+      // ... more transfers
     ]
   }
 }
